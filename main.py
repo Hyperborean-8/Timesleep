@@ -5,60 +5,33 @@ ctk.set_appearance_mode("dark")  # Modes: system (default), light, dark
 ctk.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 
 
-class Topbar(ctk.CTkFrame):
-
-    def __init__(self, master):
-        super().__init__(master)
-
-        self.button = ctk.CTkButton(self, text="Старт")
-        self.button.grid(row=0, column=0, padx=10, pady=10, sticky="news")
-
-
 # Коробка с выбором времени
-class RadioboxFrame(ctk.CTkFrame):
-    radiobutton_list: list = []
-    radiobutton_list2: list = []
-
+class SelectTimeFrame(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master)
 
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=1)
-
-        # Переменная которая позволяет выбрать только одну опцию
-        self.v = ctk.IntVar()
-        self.v.set(1)
-
+        self.grid_columnconfigure(0, weight=0)
+        self.grid_columnconfigure(1, weight=1)
         # Заранее выбранные опции
-        self.time_options = [('Выключить через 10 минут', '10 минут', 600, 1),
-                             ('Выключить через 30 минут', '30 минут', 1800, 2),
-                             ('Выключить через 1 час', '1 час', 3600, 3),
-                             ('Выключить через 2 часа', '2 часа', 7200, 4),
-                             ('Выключить через 4 часа', '4 часа', 14400, 5)]
+        self.time_options = [('4 часа', 14400, 0),
+                             ('2 часа', 7200, 1),
+                             ('1 час', 3600, 2),
+                             ('30 минут', 1800, 3),
+                             ('10 минут', 600, 4),
+                             ('0 минут', 0, 5)]
 
-        for txt, small_txt, val, pos in self.time_options:
+        self.SetTimeSlider = ctk.CTkSlider(self, from_=0, to=1, number_of_steps=5, orientation='vertical')
+        self.SetTimeSlider.grid(row=0, column=0, padx=10, pady=20, sticky="news")
+        self.label_list: list = []
 
+        self.label_frame = ctk.CTkFrame(self)
+        self.label_frame.grid(row=0, column=1, padx=10, pady=10, sticky='news')
+        for txt, val, pos in self.time_options:
             # Кнопки
-            radiobutton = ctk.CTkRadioButton(self, text=txt, variable=self.v, value=val)
-            radiobutton.grid(row=pos, column=0, padx=10, pady=(5, 5), sticky="w")
-            self.radiobutton_list.append(radiobutton)
-
-            # Кнопки при уменьшении окна
-            radiobutton = ctk.CTkRadioButton(self, text=small_txt, variable=self.v, value=val)
-            radiobutton.grid(row=pos, column=0, padx=10, pady=(5, 5), sticky="w")
-            radiobutton.grid_remove()
-            self.radiobutton_list2.append(radiobutton)
-
-        # Своё время
-        radiobutton = ctk.CTkRadioButton(self, text='Своё время', variable=self.v, value=-1)
-        radiobutton.grid(row=(len(self.time_options) + 1), column=0, padx=10, pady=(5, 5), sticky="w")
-        self.radiobutton_list.append(radiobutton)
-
-        # Своё время при уменьшении окна
-        radiobutton = ctk.CTkRadioButton(self, text='Своё', variable=self.v, value=-1)
-        radiobutton.grid(row=(len(self.time_options) + 1), column=0, padx=10, pady=(5, 5), sticky="w")
-        radiobutton.grid_remove()
-        self.radiobutton_list2.append(radiobutton)
+            label = ctk.CTkLabel(self.label_frame, text=txt)
+            label.grid(row=pos, column=1, sticky="nesw")
+            self.label_frame.rowconfigure(pos, weight=1)
+            self.label_list.append(label)
 
 
 class CurrentTimeFrame(ctk.CTkFrame):
@@ -66,38 +39,37 @@ class CurrentTimeFrame(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master)
 
-        self.label = ctk.CTkLabel(self, text='Компьютер выключится через: ')
-        self.label.grid(row=1, column=0, padx=10, pady=(0, 10), stick='news')
-
-        self.timeleft = ctk.CTkLabel(self, text='30 минут')
-        self.timeleft.grid(row=2, column=0, padx=10, pady=(0, 10), stick='news')
-
-        self.timebar = ctk.CTkProgressBar(self)
-        self.timebar.grid(row=3, column=0, padx=10, pady=10, stick='news')
-        self.grid_columnconfigure(0, weight=1)
 
 
 class ButtonsFrame(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master, fg_color="transparent")
 
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+
         # Кнопки
-        self.button = ctk.CTkButton(self, text="Старт")
-        self.button.configure(bg_color='transparent')
-        self.button.grid(row=0, column=0, padx=10, pady=10, sticky="news")
+        self.StartButton = ctk.CTkButton(self, text="Старт", command=lambda: master.start_time(master.time_set))
+        self.StartButton.grid(row=0, column=0, padx=10, pady=10, sticky="news")
+        self.RestartButton = ctk.CTkButton(self, text='Перезапустить')
+        self.RestartButton.grid(row=0, column=0, padx=10, pady=10, sticky="news")
+        self.RestartButton.grid_remove()
+        self.StopButton = ctk.CTkButton(self, text='Стоп', state='disabled')
+        self.StopButton.grid(row=0, column=1, padx=10, pady=10, sticky="news")
+
 
 class App(ctk.CTk):
-    minimized_rows: bool = False
-    options_hidden: bool = False
-    timer_on: bool = False
-    time_set: int = 0
-    time: int = 0
-
     def __init__(self, bg_color = 'transparent'):
         super().__init__()
 
-        # Прикрепление сигнала изменения к переменной
-        self.bind("<Configure>", self.handle_configure)
+        self.minimized_rows: bool = False
+        self.options_hidden: bool = False
+        self.timer_on: bool = False
+        self.time_set: int = 0
+        self.time: int = 0
+
+        # # Прикрепление сигнала изменения к переменной
+        # self.bind("<Configure>", self.handle_configure)
 
         # Настройка окна
         self.title("Timesleep")
@@ -107,66 +79,31 @@ class App(ctk.CTk):
         # Настройка сетки
         self.grid_columnconfigure(0, weight=1)
 
-        self.grid_rowconfigure(0, weight=0)
-        self.grid_rowconfigure(1, weight=1)
-        self.grid_rowconfigure(2, weight=0)
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=0)
 
         # Frames
-        self.RadioboxFrame = RadioboxFrame(self)
-        self.RadioboxFrame.master = self
-        self.RadioboxFrame.grid(row=0, column=0, padx=10, pady=5, sticky="news")
-
+        self.SelectTimeFrame = SelectTimeFrame(self)
+        self.SelectTimeFrame.grid(row=0, column=0, padx=10, pady=5, sticky="news")
         self.CurrentTimeFrame = CurrentTimeFrame(self)
-        self.CurrentTimeFrame.grid(row=1, column=0, padx=10, pady=5, sticky='news')
-
+        self.CurrentTimeFrame.grid(row=0, column=0, padx=10, pady=5, sticky='news')
+        self.CurrentTimeFrame.grid_remove()
         self.ButtonsFrame = ButtonsFrame(self)
-        self.ButtonsFrame.grid(row=2, column=0, padx=0, pady=0, sticky="wes")
+        self.ButtonsFrame.grid(row=1, column=0, padx=10, pady=5, sticky='news')
 
         # Это прикол который нам поможет потом))
         # self.attributes('-topmost', True)
 
-    def handle_configure(self, _event):
-        if not self.minimized_rows and self.winfo_width() <= 250:
-            self.minimize_rows()
-        elif self.minimized_rows and self.winfo_width() > 250:
-            self.maximize_rows()
+    def set_time(self, time):
+        print(time)
 
-        if not self.options_hidden and self.winfo_height() <= 300:
-            self.hide_options()
-        elif self.options_hidden and self.winfo_height() > 300:
-            self.show_options()
+    def start_time(self, time):
+        print(time)
 
-    def minimize_rows(self):
-        for radiobox in self.RadioboxFrame.radiobutton_list:
-            radiobox.grid_remove()
-        for radiobox in self.RadioboxFrame.radiobutton_list2:
-            radiobox.grid()
+    def restart_time(self, time):
+        self.time
 
-        print('[00] Свернуть')
-        self.minimized_rows = True
-
-    def maximize_rows(self):
-        for radiobox in self.RadioboxFrame.radiobutton_list:
-            radiobox.grid()
-        for radiobox in self.RadioboxFrame.radiobutton_list2:
-            radiobox.grid_remove()
-
-        print('[00] Развернуть')
-        self.minimized_rows = False
-
-    def hide_options(self):
-        self.RadioboxFrame.grid_remove()
-
-        print('[01] Скрыть опции')
-        self.options_hidden = True
-
-    def show_options(self):
-        self.RadioboxFrame.grid()
-
-        self.options_hidden = False
-        print('[01] Показать опции')
-
-    def time_start(self, time):
+    def stop_time(self):
         self.time
 
 app = App()
