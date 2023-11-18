@@ -1,12 +1,11 @@
 import customtkinter as ctk
-import tkinter as tk
+import time
 
 ctk.set_appearance_mode("dark")  # Modes: system (default), light, dark
 ctk.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 
 
 class Topbar(ctk.CTkFrame):
-    master = None
 
     def __init__(self, master):
         super().__init__(master)
@@ -38,10 +37,12 @@ class RadioboxFrame(ctk.CTkFrame):
                              ('Выключить через 4 часа', '4 часа', 14400, 5)]
 
         for txt, small_txt, val, pos in self.time_options:
+
             # Кнопки
             radiobutton = ctk.CTkRadioButton(self, text=txt, variable=self.v, value=val)
             radiobutton.grid(row=pos, column=0, padx=10, pady=(5, 5), sticky="w")
             self.radiobutton_list.append(radiobutton)
+
             # Кнопки при уменьшении окна
             radiobutton = ctk.CTkRadioButton(self, text=small_txt, variable=self.v, value=val)
             radiobutton.grid(row=pos, column=0, padx=10, pady=(5, 5), sticky="w")
@@ -52,10 +53,13 @@ class RadioboxFrame(ctk.CTkFrame):
         radiobutton = ctk.CTkRadioButton(self, text='Своё время', variable=self.v, value=-1)
         radiobutton.grid(row=(len(self.time_options) + 1), column=0, padx=10, pady=(5, 5), sticky="w")
         self.radiobutton_list.append(radiobutton)
+
         # Своё время при уменьшении окна
         radiobutton = ctk.CTkRadioButton(self, text='Своё', variable=self.v, value=-1)
         radiobutton.grid(row=(len(self.time_options) + 1), column=0, padx=10, pady=(5, 5), sticky="w")
+        radiobutton.grid_remove()
         self.radiobutton_list2.append(radiobutton)
+
 
 class CurrentTimeFrame(ctk.CTkFrame):
 
@@ -74,20 +78,22 @@ class CurrentTimeFrame(ctk.CTkFrame):
 
 
 class ButtonsFrame(ctk.CTkFrame):
-
     def __init__(self, master):
-        super().__init__(master)
+        super().__init__(master, fg_color="transparent")
 
         # Кнопки
         self.button = ctk.CTkButton(self, text="Старт")
+        self.button.configure(bg_color='transparent')
         self.button.grid(row=0, column=0, padx=10, pady=10, sticky="news")
-
 
 class App(ctk.CTk):
     minimized_rows: bool = False
     options_hidden: bool = False
+    timer_on: bool = False
+    time_set: int = 0
+    time: int = 0
 
-    def __init__(self):
+    def __init__(self, bg_color = 'transparent'):
         super().__init__()
 
         # Прикрепление сигнала изменения к переменной
@@ -95,7 +101,7 @@ class App(ctk.CTk):
 
         # Настройка окна
         self.title("Timesleep")
-        self.geometry("300x500")
+        self.geometry("300x380")
         # self.minsize(130, 200)
 
         # Настройка сетки
@@ -160,6 +166,8 @@ class App(ctk.CTk):
         self.options_hidden = False
         print('[01] Показать опции')
 
+    def time_start(self, time):
+        self.time
 
 app = App()
 app.mainloop()

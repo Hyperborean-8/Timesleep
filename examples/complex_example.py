@@ -116,7 +116,7 @@ class App(customtkinter.CTk):
             self.scrollable_frame_switches.append(switch)
 
         # create checkbox and switch frame
-        self.checkbox_slider_frame = customtkinter.CTkFrame(self)
+        self.checkbox_slider_frame = customtkinter.CTkFrame(self, bg_color='transparent')
         self.checkbox_slider_frame.grid(row=1, column=3, padx=(20, 20), pady=(20, 0), sticky="nsew")
         self.checkbox_1 = customtkinter.CTkCheckBox(master=self.checkbox_slider_frame)
         self.checkbox_1.grid(row=1, column=0, pady=(20, 0), padx=20, sticky="n")
