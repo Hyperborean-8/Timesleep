@@ -66,11 +66,8 @@ class SelectTimeFrame(ctk.CTkFrame):
         current_input = self.current_input
         new_input = self.time_entry.get()
 
-        if not new_input.isdigit():
+        if not new_input.isdigit() or len(new_input) > 2:
             self.time_entry.delete(0)
-            self.time_entry.insert(0, current_input)
-        elif new_input.isdigit():
-            self
 
 
 class CurrentTimeFrame(ctk.CTkFrame):  # Todo: Сделать фрейм с текущем временем
