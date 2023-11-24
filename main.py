@@ -2,6 +2,7 @@ import customtkinter as ctk
 import time as t
 import copy as copy
 import math as math
+from icecream import ic
 
 ctk.set_appearance_mode("dark")  # Режимы: системный (стандартный), светлый, тёмный
 ctk.set_default_color_theme("blue")  # Темы: синяя (стандартная), тёмно-синяя, зелёная
@@ -103,10 +104,14 @@ class SelectTimeFrame(ctk.CTkFrame):
             self.time_type.set('Минут')
             self.time_entry.insert(string=str(math.ceil(time_options[int(x)][1] / 60)), index=0)
 
+            ic()
+
         elif time_options[int(x)][1] > 5940:
 
             self.time_type.set('Часов')
             self.time_entry.insert(string=str(math.ceil(time_options[int(x)][1] / (60 * 60))), index=0)
+
+            ic()
 
     def change_by_entry(self, *_x):  # Todo: Сделать чтобы энтри изменял значение слайдера (сделать после создания кастомных слайдеров)
         time_type = self.time_type.get()
@@ -128,11 +133,29 @@ class SelectTimeFrame(ctk.CTkFrame):
         print('[00] В entry вписано:', new_time, time_type, 'или', seconds, 'секунд')
 
 
-class CurrentTimeFrame(ctk.CTkFrame):  # Todo: Сделать фрейм с текущем временем
+class CurrentTimeFrame(ctk.CTkFrame):  # Todo: Сделать фрейм с циркулярной полоской прогресса "circular progress bar.py"
 
     def __init__(self, master):
         super().__init__(master)
 
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=0)
+        self.grid_rowconfigure(2, weight=0)
+        self.grid_rowconfigure(3, weight=0)
+        self.grid_rowconfigure(4, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=0)
+        self.grid_columnconfigure(2, weight=1)
+
+        self.label = ctk.CTkLabel(self, text='Компьютер выключится через')
+        self.label.grid(row=1, column=1, pady=10)
+
+        self.font = ctk.CTkFont(size=60)
+        self.time_label = ctk.CTkLabel(self, text='00:00:00', font=self.font)
+        self.time_label.grid(row=2, column=1, pady=(0, 10))
+
+        self.time_bar = ctk.CTkProgressBar(self, height=15, width=250, corner_radius=0)
+        self.time_bar.grid(row=3, column=1, pady=(0, 10))
 
 
 
@@ -170,7 +193,6 @@ class App(ctk.CTk):
         self.title("Timesleep")
         self.geometry("300x315")
         self.resizable(False, False)
-        # self.minsize(130, 200)
 
         # Настройка сетки
         self.grid_columnconfigure(0, weight=1)
@@ -187,8 +209,8 @@ class App(ctk.CTk):
         self.ButtonsFrame = ButtonsFrame(self)
         self.ButtonsFrame.grid(row=1, column=0, padx=10, pady=5, sticky='news')
 
-        # self.SelectTimeFrame.grid_remove()
-        # self.CurrentTimeFrame.grid()
+        self.SelectTimeFrame.grid_remove()
+        self.CurrentTimeFrame.grid() # TODO: -----------------------------------------------------------------
 
         # Это прикол который нам поможет потом))
         # self.attributes('-topmost', True)
