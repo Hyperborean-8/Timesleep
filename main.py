@@ -1,11 +1,13 @@
 import customtkinter as ctk
 import copy as copy
 import math as math
+from PIL import Image
 from icecream import ic
 import os
 
 ctk.set_appearance_mode("dark")  # Режимы: системный (стандартный), светлый, тёмный
 ctk.set_default_color_theme("blue")  # Темы: синяя (стандартная), тёмно-синяя, зелёная
+ctk.deactivate_automatic_dpi_awareness()
 debug = True
 # ic.disable()
 
@@ -102,10 +104,13 @@ class SelectTimeFrame(ctk.CTkFrame):
 
         # Если entry длиннее чем 2
         if len(new_input) > 2:
+
             # Удалить третий символ
             self.time_entry.delete(2)
 
-        self.change_by_entry()
+        # Не менять значение, если работает таймер
+        if not self.master.timer_on:
+            self.change_by_entry()
 
     def change_by_slider(self, x):
         time_options = copy.deepcopy(self.time_options)
@@ -211,6 +216,8 @@ class CurrentTimeFrame(ctk.CTkFrame):
             label_text = f'{tr(minutes)}:{tr(seconds)}'
         elif hours == 0 and minutes == 0:
             label_text = f'{seconds}'
+        else:
+            label_text = 'Something went wrong'
 
         self.time_label.configure(text=label_text)
 
@@ -222,15 +229,34 @@ class ButtonsFrame(ctk.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
 
+        image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons")
+        ic(image_path)
+        self.icon_settings_light = ctk.CTkImage(Image.open(os.path.join(image_path, "icon-settings-light.png")), size=(20, 20))
+        self.icon_minimize_light = ctk.CTkImage(Image.open(os.path.join(image_path, "icon-minimize-light.png")),
+                                                size=(20, 20))
+
+
+
         # Кнопки
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
+
         self.start_button = ctk.CTkButton(self, text="Старт", state=ctk.DISABLED, command=master.start_timer)
-        self.start_button.grid(row=0, column=1, padx=(10,0), pady=10)
+        self.start_button.grid(row=0, column=1, padx=10, pady=10, sticky='ew')
         self.stop_button = ctk.CTkButton(self, text='Стоп', command=master.stop_timer)
-        self.stop_button.grid(row=0, column=1, padx=(10,0), pady=10)
+        self.stop_button.grid(row=0, column=1, padx=10, pady=10, sticky='ew')
         self.stop_button.grid_remove()
 
         self.ExtraButtonFrame = ctk.CTkFrame(self, height=30, width=150)
-        self.ExtraButtonFrame.grid(row=0, column=0)
+        self.ExtraButtonFrame.grid(row=0, column=0, sticky='ew', padx=10, pady=10)
+
+        self.ExtraButtonFrame.columnconfigure(0, weight=0)
+        self.ExtraButtonFrame.columnconfigure(1, weight=1)
+
+        self.settings_button = ctk.CTkButton(self.ExtraButtonFrame, text='', image=self.icon_settings_light, width=20, height=20)
+        self.settings_button.grid(row=0, column=0)
+        self.minimize = ctk.CTkButton(self.ExtraButtonFrame, text='', image=self.icon_minimize_light, width=20, height=20)
+        self.minimize.grid(row=0, column=2)
 
     def hide_start(self):
         self.start_button.grid_remove()
@@ -318,6 +344,7 @@ class App(ctk.CTk):
         self.after_cancel(self.timer_after)
 
     def handle_configure(self, _event):
+
         self.SelectTimeFrame.validate_entry()
 
     def update_timer(self):
