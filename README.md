@@ -8,7 +8,7 @@ Only available in russian for now.
 
 # Install
 
-Download the latest release, unpack in a convenient location and run the exe file.
+Download the latest release, extract archive files in a convenient for you location and run the exe file.
 
 # Functions
 
