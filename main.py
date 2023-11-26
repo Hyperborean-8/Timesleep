@@ -6,7 +6,8 @@ import os
 
 ctk.set_appearance_mode("dark")  # Режимы: системный (стандартный), светлый, тёмный
 ctk.set_default_color_theme("blue")  # Темы: синяя (стандартная), тёмно-синяя, зелёная
-
+debug = True
+# ic.disable()
 
 def hide_window():
     app.withdraw()
@@ -17,8 +18,9 @@ def show_window():
 
 
 def turn_off_computer():
-    os.system("shutdown /s /t 1")
 
+    if not debug:
+        os.system("shutdown /s /t 1")
 
 # Коробка с выбором времени
 class SelectTimeFrame(ctk.CTkFrame):
@@ -93,6 +95,10 @@ class SelectTimeFrame(ctk.CTkFrame):
         if len(new_input) > 0 and not new_input[len(new_input) - 1].isdigit():
             # Удалить последний символ
             self.time_entry.delete(len(new_input) - 1)
+
+        # Если пользователь поставил минус перед числом, удалить минус
+        if len(new_input) > 0 and new_input[0] == '-':
+            self.time_entry.delete(0)
 
         # Если entry длиннее чем 2
         if len(new_input) > 2:
@@ -177,13 +183,9 @@ class CurrentTimeFrame(ctk.CTkFrame):
         self.update_timebar()
         self.update_text()
 
-        ic()
-
     def update_timebar(self):
         # Todo: Сделать фрейм с циркулярной полоской прогресса "circular progress bar.py"
         self.time_bar.set(self.master.seconds / self.master.seconds_set)
-
-        ic(self.master.seconds / self.master.seconds_set)
 
     def update_text(self):
 
@@ -209,8 +211,6 @@ class CurrentTimeFrame(ctk.CTkFrame):
             label_text = f'{tr(minutes)}:{tr(seconds)}'
         elif hours == 0 and minutes == 0:
             label_text = f'{seconds}'
-
-        ic(label_text)
 
         self.time_label.configure(text=label_text)
 
@@ -329,8 +329,6 @@ class App(ctk.CTk):
         if self.seconds > 0 and self.timer_on:
             self.seconds -= 1
 
-            ic(self.seconds)
-
             self.CurrentTimeFrame.update_all()
 
             self.timer_after = self.after(1000, self.update_timer)
@@ -340,7 +338,7 @@ class App(ctk.CTk):
             turn_off_computer()
 
         else:
-            ic()
+            pass
 
 
 app = App()
