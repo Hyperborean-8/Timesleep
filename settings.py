@@ -14,7 +14,7 @@ def check_config():
         parser = ConfigParser()
 
         parser.add_section('confirmation')
-        parser.set('confirmation', 'confirm_when_timer_on', 'True')
+        parser.set('confirmation', 'dont_ask', 'False')
 
         with open('settings.ini', 'w') as configfile:
             parser.write(configfile)
@@ -46,4 +46,4 @@ def set(section, option, state):
 
 # Точка входа (для отладки)
 if __name__ == '__main__':
-    get('confirmation', 'confirm_when_timer_on')
+    get('confirmation', 'dont_ask')
