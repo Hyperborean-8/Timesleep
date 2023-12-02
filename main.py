@@ -1,11 +1,9 @@
-import customtkinter as ctk
-import copy as copy
-import math as math
 from PIL import Image
 from icecream import ic
+import customtkinter as ctk
+import copy
+import math
 import os
-from configparser import ConfigParser
-from module import *
 import settings
 
 ctk.set_appearance_mode("dark")  # Режимы: системный (стандартный), светлый, тёмный
@@ -13,9 +11,10 @@ ctk.set_default_color_theme("blue")  # Темы: синяя (стандартн�
 ctk.deactivate_automatic_dpi_awareness()  # Программа больше не реагирует на изменение интерфейса ОС.
 
 # Отладка
-debug = True  # Режим отладки. Не позволяет программе выключить компьютер.
+debug = False # Режим отладки. Не позволяет программе выключить компьютер.
 ic(debug)
 if not debug: ic.disable()
+
 
 def hide_window():
     app.withdraw()
@@ -56,11 +55,17 @@ class ConfirmationWindow(ctk.CTkToplevel):
         self.label = ctk.CTkLabel(self.LabelFrame, text='Вы уверены что хотите выйти? Таймер всё ещё работает.')
         self.label.grid(row=0, column=0)
 
+        # Переменная значения чекбокса
+        self.var = ctk.BooleanVar()
+        # Привязка сигнала изменения к функции
+        self.var.trace('w', self.change_other_checkbox)
+
         self.checkbox = ctk.CTkCheckBox(self.LabelFrame, text='Больше не спрашивать', font=('Arial', 12),
                                         checkbox_height=16, checkbox_width=16, border_width=2,
-                                        command=self.confirm_settings)
+                                        command=self.confirm_settings, variable=self.var)
         self.checkbox.grid(row=2, column=0, padx=5, pady=5)
 
+        # Фрейм с кнопками
         self.ButtonsFrame = ctk.CTkFrame(self, height=20, fg_color='transparent')
         self.ButtonsFrame.grid(row=3, column=1, sticky='ews', pady=(0, 15))
 
@@ -73,7 +78,7 @@ class ConfirmationWindow(ctk.CTkToplevel):
 
     # Функция, отвечающая за чекбокс "Не спрашивать больше"
     def confirm_settings(self):
-        ic(bool(self.checkbox.get()))
+        settings.set('confirmation', 'dont_ask', str(bool(self.checkbox.get())))
 
     def exit(self):
         self.master.destroy()
@@ -82,6 +87,11 @@ class ConfirmationWindow(ctk.CTkToplevel):
         self.master.focus()
         self.destroy()
 
+    # Функция, переключаящая чекбокс в окне Настроек
+    def change_other_checkbox(self, *args):
+        if self.master.SettingsWindow is not None and self.master.SettingsWindow.winfo_exists():
+            self.master.SettingsWindow.var.set(self.var.get())
+
 
 # Окно с настройками
 class SettingsWindow(ctk.CTkToplevel):
@@ -89,17 +99,34 @@ class SettingsWindow(ctk.CTkToplevel):
         super().__init__(*args, **kwargs)
         self.title("Настройки")
         self.geometry("400x300")
+        self.resizable(False, False)
 
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
 
-        self.ScrollableFrame = ctk.CTkScrollableFrame(self)
-        self.ScrollableFrame.grid(row=0, column=0, pady=10, padx=10, sticky='news')
+        self.MainFrame = ctk.CTkFrame(self)
+        self.MainFrame.grid(row=0, column=0, pady=10, padx=10, sticky='news')
 
-        self.checkbox = ctk.CTkCheckBox(self.ScrollableFrame, text='Просить подтверждение выхода при запущеном таймере',
-                                        checkbox_width=16, checkbox_height=16)
-        self.checkbox.grid(row=0, column=0, padx=5, pady=5)
+        # Переменная чекбокса TODO: Переименовать
+        self.var = ctk.BooleanVar()
+        # Привязка сигнала изменения к функции
+        self.var.trace('w', self.change_other_checkbox)
 
+        self.checkbox = ctk.CTkCheckBox(self.MainFrame, text='Не спрашивать подтверждение выхода при запущенном таймере',
+                                        checkbox_width=16, checkbox_height=16, command=self.confirm_settings, variable=self.var)
+        self.checkbox._text_label.configure(wraplength=350)
+        self.checkbox.grid(row=0, column=0, padx=10, pady=10)
+
+    # Функция, изменяющая настройку подтверждения при таймере
+    def confirm_settings(self):
+        settings.set('confirmation', 'dont_ask', str(bool(self.checkbox.get())))
+
+    # Функция, переключаящая чекбокс в окне Подтверждения
+    def change_other_checkbox(self, *args):
+        ic(self.master.ConfirmationWindow)
+        if self.master.ConfirmationWindow is not None and self.master.ConfirmationWindow.winfo_exists():
+            ic(self.master.ConfirmationWindow.var.set)
+            self.master.ConfirmationWindow.var.set(self.var.get())
 
 # Коробка с выбором времени
 class SelectTimeFrame(ctk.CTkFrame):
@@ -110,7 +137,7 @@ class SelectTimeFrame(ctk.CTkFrame):
         self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)
 
-        # --- Слайдер и надписи ---
+        # Слайдер и надписи
         self.SliderFrame = ctk.CTkFrame(self)
         self.SliderFrame.grid(row=0, column=0, sticky='news', padx=(0, 5))
 
@@ -369,7 +396,7 @@ class App(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        # Конфиг
+        # Настройки
         settings.check_config()
 
         # Переменные для таймера
@@ -479,13 +506,17 @@ class App(ctk.CTk):
 
     def exit_or_confirm(self):
 
-        if not settings.get('confirmation', 'confirm_when_timer_on'):
+        if settings.get('confirmation', 'dont_ask'):
             self.destroy()
+
         elif self.timer_on and (self.ConfirmationWindow is None or not self.ConfirmationWindow.winfo_exists()):
+
             self.ConfirmationWindow = ConfirmationWindow(self)  # Создать окно, если его нет или уничтожено
             self.after(20, self.ConfirmationWindow.focus)
+
         elif self.timer_on:
             self.ConfirmationWindow.focus()  # Если окно есть, переключиться на него
+
         else:
             self.destroy()
 
