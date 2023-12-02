@@ -20,3 +20,5 @@ Download the latest release, extract archive files in a convenient for you locat
     - [ ] Change language
     - [ ] Change scaling
     - [ ] Change slider's time presets
+    - [ ] Change preferences
+- [ ] Exit confirmation (when the timer is running)
