@@ -5,21 +5,17 @@ from PIL import Image
 from icecream import ic
 import os
 from configparser import ConfigParser
+from module import *
+import settings
 
 ctk.set_appearance_mode("dark")  # Режимы: системный (стандартный), светлый, тёмный
 ctk.set_default_color_theme("blue")  # Темы: синяя (стандартная), тёмно-синяя, зелёная
 ctk.deactivate_automatic_dpi_awareness()  # Программа больше не реагирует на изменение интерфейса ОС.
+
+# Отладка
 debug = True  # Режим отладки. Не позволяет программе выключить компьютер.
-
-# ic.disable()
-
-# Настройки
-parser = ConfigParser()
-parser.read('settings.ini')
-
-confirmation = bool(parser.get('confirmation', 'confirm_when_timer_on'))
-ic(confirmation)
-
+ic(debug)
+if not debug: ic.disable()
 
 def hide_window():
     app.withdraw()
@@ -34,12 +30,17 @@ def turn_off_computer():
         os.system("shutdown /s /t 1")
 
 
+# Окно подтверждения о выходе из программы, когда таймер работает
 class ConfirmationWindow(ctk.CTkToplevel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.title("Timesleep")
-        self.geometry("450x200")
 
+        # Настройки
+        self.title("Timesleep")
+        self.geometry("430x180")
+        self.resizable(False, False)
+
+        # Центрирование элементов
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=0)
         self.rowconfigure(2, weight=1)
@@ -48,25 +49,38 @@ class ConfirmationWindow(ctk.CTkToplevel):
         self.columnconfigure(1, weight=0)
         self.columnconfigure(2, weight=1)
 
-        self.LabelFrame = ctk.CTkFrame(self)
+        # Фрейм с надписью
+        self.LabelFrame = ctk.CTkFrame(self, width=350, fg_color='transparent')
         self.LabelFrame.grid(row=1, column=1)
 
         self.label = ctk.CTkLabel(self.LabelFrame, text='Вы уверены что хотите выйти? Таймер всё ещё работает.')
         self.label.grid(row=0, column=0)
 
         self.checkbox = ctk.CTkCheckBox(self.LabelFrame, text='Больше не спрашивать', font=('Arial', 12),
-                                        checkbox_height=16, checkbox_width=16, border_width=2)
+                                        checkbox_height=16, checkbox_width=16, border_width=2,
+                                        command=self.confirm_settings)
         self.checkbox.grid(row=2, column=0, padx=5, pady=5)
 
-        self.ButtonsFrame = ctk.CTkFrame(self, height=20)
-        self.ButtonsFrame.grid(row=3, column=1, sticky='ews', pady=(0,15))
+        self.ButtonsFrame = ctk.CTkFrame(self, height=20, fg_color='transparent')
+        self.ButtonsFrame.grid(row=3, column=1, sticky='ews', pady=(0, 15))
 
-        self.quit_button = ctk.CTkButton(self.ButtonsFrame)
+        self.quit_button = ctk.CTkButton(self.ButtonsFrame, text='Отмена', command=self.return_back)
         self.quit_button.grid(row=0, column=0)
         self.ButtonsFrame.columnconfigure(1, weight=1)
-        self.cancel_button = ctk.CTkButton(self.ButtonsFrame)
+        self.cancel_button = ctk.CTkButton(self.ButtonsFrame, text='Выйти', fg_color='#c72800', hover_color='#941f01',
+                                           command=self.exit)
         self.cancel_button.grid(row=0, column=2)
 
+    # Функция, отвечающая за чекбокс "Не спрашивать больше"
+    def confirm_settings(self):
+        ic(bool(self.checkbox.get()))
+
+    def exit(self):
+        self.master.destroy()
+
+    def return_back(self):
+        self.master.focus()
+        self.destroy()
 
 
 # Окно с настройками
@@ -82,7 +96,8 @@ class SettingsWindow(ctk.CTkToplevel):
         self.ScrollableFrame = ctk.CTkScrollableFrame(self)
         self.ScrollableFrame.grid(row=0, column=0, pady=10, padx=10, sticky='news')
 
-        self.checkbox = ctk.CTkCheckBox(self.ScrollableFrame, text='Просить подтверждение выхода при запущеном таймере', checkbox_width=16, checkbox_height=16)
+        self.checkbox = ctk.CTkCheckBox(self.ScrollableFrame, text='Просить подтверждение выхода при запущеном таймере',
+                                        checkbox_width=16, checkbox_height=16)
         self.checkbox.grid(row=0, column=0, padx=5, pady=5)
 
 
@@ -309,7 +324,7 @@ class ButtonsFrame(ctk.CTkFrame):
         self.grid_columnconfigure(1, weight=1)
 
         image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons")
-        ic(image_path)
+
         self.icon_settings_light = ctk.CTkImage(Image.open(os.path.join(image_path, "icon-settings-light.png")),
                                                 size=(20, 20))
         self.icon_minimize_light = ctk.CTkImage(Image.open(os.path.join(image_path, "icon-minimize-light.png")),
@@ -333,19 +348,12 @@ class ButtonsFrame(ctk.CTkFrame):
         self.ExtraButtonFrame.columnconfigure(1, weight=1)
 
         self.settings_button = ctk.CTkButton(self.ExtraButtonFrame, text='', image=self.icon_settings_light,
-                                             width=20, height=20, command=self.open_settings)
+                                             width=20, height=20, command=self.master.open_settings)
         self.settings_button.grid(row=0, column=0)
 
         self.minimize = ctk.CTkButton(self.ExtraButtonFrame, text='', image=self.icon_minimize_light,
                                       width=20, height=20)
         self.minimize.grid(row=0, column=2)
-
-    def open_settings(self):
-        if self.master.settings is None or not self.master.settings.winfo_exists():
-            self.master.settings = SettingsWindow(self)  # create window if its None or destroyed
-            self.after(10, self.master.settings.focus)
-        else:
-            self.master.settings.focus()  # if window exists focus it
 
     def hide_start(self):
         self.start_button.grid_remove()
@@ -361,12 +369,15 @@ class App(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        # Конфиг
+        settings.check_config()
+
         # Переменные для таймера
         self.timer_after = None
         self.minimized_rows: bool = False
         self.options_hidden: bool = False
         self.timer_on: bool = False
-        self.extra_second = False
+        self.extra_second: bool = False
         self.seconds_set: int = 0
         self.seconds: int = 0
 
@@ -374,10 +385,9 @@ class App(ctk.CTk):
         self.SettingsWindow = None
         self.ConfirmationWindow = None
 
-        # Прикрепление сигнала Клавиш к переменной
+        # Прикрепление сигналов к функциям
         self.bind("<Key>", self.handle_configure)
-
-        self.protocol('WM_DELETE_WINDOW', self.display_confirmation)
+        self.protocol('WM_DELETE_WINDOW', self.exit_or_confirm)
 
         # Настройка окна
         self.title("Timesleep")
@@ -467,15 +477,26 @@ class App(ctk.CTk):
         # Валидация
         self.SelectTimeFrame.validate_entry()
 
-    def display_confirmation(self):
-        if self.ConfirmationWindow is None or not self.ConfirmationWindow.winfo_exists():
-            self.ConfirmationWindow = ConfirmationWindow(self)  # create window if its None or destroyed
-            self.after(80, self.ConfirmationWindow.focus)
+    def exit_or_confirm(self):
+
+        if not settings.get('confirmation', 'confirm_when_timer_on'):
+            self.destroy()
+        elif self.timer_on and (self.ConfirmationWindow is None or not self.ConfirmationWindow.winfo_exists()):
+            self.ConfirmationWindow = ConfirmationWindow(self)  # Создать окно, если его нет или уничтожено
+            self.after(20, self.ConfirmationWindow.focus)
+        elif self.timer_on:
+            self.ConfirmationWindow.focus()  # Если окно есть, переключиться на него
         else:
-            self.ConfirmationWindow.focus()  # if window exists focus it
+            self.destroy()
+
+    def open_settings(self):
+        if self.SettingsWindow is None or not self.SettingsWindow.winfo_exists():
+            self.SettingsWindow = SettingsWindow(self)  # create window if its None or destroyed
+            self.after(10, self.SettingsWindow.focus)
+        else:
+            self.SettingsWindow.focus()  # if window exists focus it
 
 
-# Главные циклы
+# Главные цикл
 app = App()
-app.display_confirmation()
 app.mainloop()
