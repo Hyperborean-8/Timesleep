@@ -15,10 +15,10 @@ Download the latest release, extract archive files in a convenient for you locat
 - [x] Main functions
 - [ ] Hide in tray
     - [ ] In tray functions
-- [ ] Settings
+- [x] Settings
     - [ ] Change theme (dark/light)
     - [ ] Change language
     - [ ] Change scaling
     - [ ] Change slider's time presets
-    - [ ] Change preferences
-- [ ] Exit confirmation (when the timer is running)
+    - [x] Change preferences
+- [x] Exit confirmation (when the timer is running)
