@@ -1,5 +1,6 @@
 import os
 from configparser import ConfigParser
+import configparser
 from icecream import ic
 import customtkinter as ctk
 
@@ -15,20 +16,40 @@ class SettingsWindow(ctk.CTkToplevel):
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
 
+        # -- Главный фрейм, хранящий всё
         self.MainFrame = ctk.CTkFrame(self)
         self.MainFrame.grid(row=0, column=0, pady=10, padx=10, sticky='news')
+        self.columnconfigure(0, weight=1)
 
-        # Переменная чекбокса TODO: Переименовать
+        # --- Выбор языка ---
+        self.LanguageFrame = ctk.CTkFrame(self.MainFrame)
+        self.LanguageFrame.grid(row=0, column=0, sticky='news')
+
+        self.language_label = ctk.CTkLabel(self.LanguageFrame, text='Язык')
+        self.language_label.grid(row=0, column=0, sticky='w')
+        self.language_box = ctk.CTkComboBox(self.LanguageFrame)
+        self.language_box.grid(row=0, column=1, sticky='e')
+
+        # --- Чекбокс подтверждения ---
+        # Переменная чекбокса
         self.var = ctk.BooleanVar()
         # Привязка сигнала изменения к функции
         self.var.trace('w', self.change_other_checkbox)
 
-        self.checkbox = ctk.CTkCheckBox(self.MainFrame,
-                                        text='Не спрашивать подтверждение выхода при запущенном таймере',
-                                        checkbox_width=16, checkbox_height=16, command=self.confirm_settings,
-                                        variable=self.var)
-        self.checkbox.text_label.configure(wraplength=350)
-        self.checkbox.grid(row=0, column=0, padx=10, pady=10)
+        try:
+            self.var.set(get('confirmation', 'dont_ask'))
+        except configparser.NoOptionError as error:
+            print(error)
+            set('confirmation', 'dont_ask', 'false')
+            self.exit_or_confirm()
+
+        self.confirmation = ctk.CTkCheckBox(self.MainFrame,
+                                            text='Не спрашивать подтверждение выхода при запущенном таймере',
+                                            checkbox_width=16, checkbox_height=16,
+                                            command=self.confirm_settings,
+                                            variable=self.var)
+        self.confirmation.text_label.configure(wraplength=350)
+        self.confirmation.grid(row=1, column=0, padx=10, pady=10)
 
     # Функция, изменяющая настройку подтверждения при таймере
     def confirm_settings(self):
@@ -85,4 +106,5 @@ def set(section, option, state):
 
 # Точка входа (для отладки)
 if __name__ == '__main__':
-    get('confirmation', 'dont_ask')
+    app = SettingsWindow()
+    app.mainloop()

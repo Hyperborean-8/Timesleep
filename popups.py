@@ -1,4 +1,6 @@
 import customtkinter as ctk
+import configparser
+import settings
 
 
 # Окно подтверждения о выходе из программы, когда таймер работает
@@ -32,6 +34,13 @@ class ConfirmationWindow(ctk.CTkToplevel):
         # Привязка сигнала изменения к функции
         self.var.trace('w', self.change_other_checkbox)
 
+        try:
+            self.var.set(settings.get('confirmation', 'dont_ask'))
+        except configparser.NoOptionError as error:
+            print(error)
+            settings.set('confirmation', 'dont_ask', 'false')
+            self.exit_or_confirm()
+
         self.checkbox = ctk.CTkCheckBox(self.LabelFrame, text='Больше не спрашивать', font=('Arial', 12),
                                         checkbox_height=16, checkbox_width=16, border_width=2,
                                         command=self.confirm_settings, variable=self.var)
@@ -59,7 +68,7 @@ class ConfirmationWindow(ctk.CTkToplevel):
         self.master.focus()
         self.destroy()
 
-    # Функция, переключаящая чекбокс в окне Настроек
+    # Функция, переключающая чекбокс в окне Настроек
     def change_other_checkbox(self, *_args):
         if self.master.SettingsWindow is not None and self.master.SettingsWindow.winfo_exists():
             self.master.SettingsWindow.var.set(self.var.get())

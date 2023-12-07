@@ -1,3 +1,5 @@
+import configparser
+
 from PIL import Image
 from icecream import ic
 import customtkinter as ctk
@@ -197,19 +199,25 @@ class App(ctk.CTk):
 
     def exit_or_confirm(self):
 
-        if settings.get('confirmation', 'dont_ask'):
-            self.destroy()
+        try:
+            if settings.get('confirmation', 'dont_ask'):
+                self.destroy()
 
-        elif self.timer_on and (self.ConfirmationWindow is None or not self.ConfirmationWindow.winfo_exists()):
+            elif self.timer_on and (self.ConfirmationWindow is None or not self.ConfirmationWindow.winfo_exists()):
 
-            self.ConfirmationWindow = popups.ConfirmationWindow(self)  # Создать окно, если его нет или уничтожено
-            self.after(20, self.ConfirmationWindow.focus)
+                self.ConfirmationWindow = popups.ConfirmationWindow(self)  # Создать окно, если его нет или уничтожено
+                self.after(20, self.ConfirmationWindow.focus)
 
-        elif self.timer_on:
-            self.ConfirmationWindow.focus()  # Если окно есть, переключиться на него
+            elif self.timer_on:
+                self.ConfirmationWindow.focus()  # Если окно есть, переключиться на него
 
-        else:
-            self.destroy()
+            else:
+                self.destroy()
+
+        except configparser.NoOptionError as error:
+            print(error)
+            settings.set('confirmation', 'dont_ask', 'false')
+            self.exit_or_confirm()
 
     def open_settings(self):
         if self.SettingsWindow is None or not self.SettingsWindow.winfo_exists():
