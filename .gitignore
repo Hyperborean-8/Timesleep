@@ -153,3 +153,5 @@ cython_debug/
 
 # Custom
 settings.ini
+languages/english.ini
+languages/russian.ini

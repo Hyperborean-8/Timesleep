@@ -1,23 +1,22 @@
 import configparser
-
 from PIL import Image
 from icecream import ic
 import customtkinter as ctk
 import copy
 import math
 import os
-
 import settings
 import timeselect
 import timer
 import popups
+import language
 
 ctk.set_appearance_mode("dark")  # Режимы: системный (стандартный), светлый, тёмный
 ctk.set_default_color_theme("blue")  # Темы: синяя (стандартная), тёмно-синяя, зелёная
 ctk.deactivate_automatic_dpi_awareness()  # Программа больше не реагирует на изменение интерфейса ОС.
 
 # Отладка
-debug = False  # Режим отладки. Не позволяет программе выключить компьютер.
+debug = True  # Режим отладки. Не позволяет программе выключить компьютер.
 ic(debug)
 if not debug: ic.disable()
 
@@ -91,6 +90,8 @@ class App(ctk.CTk):
 
         # Настройки
         settings.check_config()
+        self.StringVars = language.StringVars()
+        ic(self.StringVars)
 
         # Переменные для таймера
         self.timer_after = None
@@ -221,7 +222,7 @@ class App(ctk.CTk):
 
     def open_settings(self):
         if self.SettingsWindow is None or not self.SettingsWindow.winfo_exists():
-            self.SettingsWindow = settings.SettingsWindow(self)  # create window if its None or destroyed
+            self.SettingsWindow = settings.SettingsWindow(StringVars=self.StringVars)  # create window if its None or destroyed
             self.after(10, self.SettingsWindow.focus)
         else:
             self.SettingsWindow.focus()  # if window exists focus it
