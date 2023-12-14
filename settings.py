@@ -9,11 +9,11 @@ import customtkinter as ctk
 # Окно с настройками
 class SettingsWindow(ctk.CTkToplevel):
 
-    def __init__(self, StringVars, *args, **kwargs):
+    def __init__(self,  *args, **kwargs):
         super().__init__(*args, **kwargs)
         ic()
         print('НАСТРОЙКИ РАБОТАЮТ!!')
-        self.StringVars = StringVars
+        self.master.StringVars.scan()
 
         self.title("Настройки")
         self.geometry("400x300")
@@ -34,7 +34,8 @@ class SettingsWindow(ctk.CTkToplevel):
 
         self.language_label = ctk.CTkLabel(self.LanguageFrame, text='Язык')
         self.language_label.grid(row=0, column=0, sticky='w')
-        self.language_box = ctk.CTkOptionMenu(self.LanguageFrame, values=self.StringVars.get_all_names())
+        self.language_box = ctk.CTkOptionMenu(self.LanguageFrame, values=self.master.StringVars.get_all('METADATA', 'name'),
+                                              command=self.master.StringVars.change_language)
         self.language_box.grid(row=0, column=2, sticky='e')
 
         # --- Чекбокс подтверждения ---
@@ -79,7 +80,7 @@ def check_config():
             'dont_ask': 'False'
         },
         'language': {
-            'current': 'english'
+            'current': 'English'
         }
     }
 
@@ -114,7 +115,3 @@ def set(section, option, state):
         parser.write(configfile)
 
 
-# Точка входа (для отладки)
-if __name__ == '__main__':
-    app = SettingsWindow()
-    app.mainloop()

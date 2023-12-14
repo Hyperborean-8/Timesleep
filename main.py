@@ -222,7 +222,7 @@ class App(ctk.CTk):
 
     def open_settings(self):
         if self.SettingsWindow is None or not self.SettingsWindow.winfo_exists():
-            self.SettingsWindow = settings.SettingsWindow(StringVars=self.StringVars)  # create window if its None or destroyed
+            self.SettingsWindow = settings.SettingsWindow(self)  # create window if its None or destroyed
             self.after(10, self.SettingsWindow.focus)
         else:
             self.SettingsWindow.focus()  # if window exists focus it

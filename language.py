@@ -5,15 +5,13 @@ from configparser import ConfigParser
 import configparser
 from icecream import ic
 
-def get_all_languages():
-    return [f for f in os.listdir('languages') if f.endswith('.ini')]
-
 def restore_english():
     parser = ConfigParser()
 
     default_config = {
         'METADATA': {
-          'language_name': 'English'
+            'name': 'English',
+            'id': 'english'
         },
         'buttons': {
             'start_timer': 'Start',
@@ -31,35 +29,44 @@ class StringVars:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Восстановление файла с английским языком
         restore_english()
-        self.languages = get_all_languages()
 
-        ic(self.languages)
+        # Модуль спришвает у Настроек текущий язык
+        try:
+            self.current_language = settings.get('language', 'current')
+        except configparser.NoSectionError as error:
+            ic(error)
+            self.current_language = 'English'
+        except configparser.NoOptionError as error:
+            ic(error)
+            self.current_language = 'English'
 
-        self.get_all_names()
+        # Модуль сканирует папку language/ на наличие ini файлов
+        self.scan()
 
-    def get_all_names(self) -> list:
+
+
+    def get_all(self, section, option) -> list:
         names = []
-        for configfile in self.languages:
+        for configfile in self.language_files:
             ic(configfile)
             try:
                 parser = ConfigParser()
                 parser.read('languages/' + configfile)
-                names.append(parser.get('METADATA', 'language_name'))
+                names.append(parser.get(section, option))
                 ic()
             except configparser.NoSectionError as error:
                 ic(error)
-                names.append(configfile)
             except configparser.NoOptionError as error:
                 ic(error)
-                names.append(configfile)
 
         return names
 
-
         ic(names)
 
+    def change_language(self, new_language):
+        ic(self, new_language)
 
-
-
-
+    def scan(self):
+        self.language_files = [f for f in os.listdir('languages') if f.endswith('.ini')]
