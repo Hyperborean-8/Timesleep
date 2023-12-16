@@ -9,7 +9,7 @@ import settings
 import timeselect
 import timer
 import popups
-import language
+from language import Language
 
 ctk.set_appearance_mode("dark")  # Режимы: системный (стандартный), светлый, тёмный
 ctk.set_default_color_theme("blue")  # Темы: синяя (стандартная), тёмно-синяя, зелёная
@@ -39,6 +39,8 @@ class ButtonsFrame(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master, fg_color="transparent")
 
+        language = self.master.Language
+
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
 
@@ -53,9 +55,9 @@ class ButtonsFrame(ctk.CTkFrame):
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
 
-        self.start_button = ctk.CTkButton(self, text="Старт", state=ctk.DISABLED, command=master.start_timer)
+        self.start_button = ctk.CTkButton(self, textvariable=language.vars['buttons']['start_timer'], state=ctk.DISABLED, command=master.start_timer)
         self.start_button.grid(row=0, column=1, padx=10, pady=10, sticky='ew')
-        self.stop_button = ctk.CTkButton(self, text='Стоп', command=master.stop_timer)
+        self.stop_button = ctk.CTkButton(self, textvariable=language.vars['buttons']['stop_timer'], command=master.stop_timer)
         self.stop_button.grid(row=0, column=1, padx=10, pady=10, sticky='ew')
         self.stop_button.grid_remove()
 
@@ -90,8 +92,9 @@ class App(ctk.CTk):
 
         # Настройки
         settings.check_config()
-        self.StringVars = language.StringVars()
-        ic(self.StringVars)
+        self.Language = Language()
+
+        ic(self.Language)
 
         # Переменные для таймера
         self.timer_after = None

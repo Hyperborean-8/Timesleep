@@ -8,6 +8,8 @@ class ConfirmationWindow(ctk.CTkToplevel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        language = self.master.Language
+
         # Настройки
         self.title("Timesleep")
         self.geometry("430x180")
@@ -26,7 +28,7 @@ class ConfirmationWindow(ctk.CTkToplevel):
         self.LabelFrame = ctk.CTkFrame(self, width=350, fg_color='transparent')
         self.LabelFrame.grid(row=1, column=1)
 
-        self.label = ctk.CTkLabel(self.LabelFrame, text='Вы уверены что хотите выйти? Таймер всё ещё работает.')
+        self.label = ctk.CTkLabel(self.LabelFrame, textvariable=language.vars['popups']['confirmation_label'])
         self.label.grid(row=0, column=0)
 
         # Переменная значения чекбокса
@@ -41,7 +43,7 @@ class ConfirmationWindow(ctk.CTkToplevel):
             settings.set('confirmation', 'dont_ask', 'false')
             self.exit_or_confirm()
 
-        self.checkbox = ctk.CTkCheckBox(self.LabelFrame, text='Больше не спрашивать', font=('Arial', 12),
+        self.checkbox = ctk.CTkCheckBox(self.LabelFrame, textvariable=language.vars['popups']['confirmation_setting'], font=('Arial', 12),
                                         checkbox_height=16, checkbox_width=16, border_width=2,
                                         command=self.confirm_settings, variable=self.var)
         self.checkbox.grid(row=2, column=0, padx=5, pady=5)

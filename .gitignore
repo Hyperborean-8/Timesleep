@@ -155,3 +155,4 @@ cython_debug/
 settings.ini
 languages/english.ini
 languages/russian.ini
+.idea/encodings.xml
