@@ -4,6 +4,7 @@ import os
 from configparser import ConfigParser
 import configparser
 from icecream import ic
+import logging
 
 
 class Language:
@@ -12,6 +13,9 @@ class Language:
 
         # Переменная с названиями файлов, именами и id файлов с языком
         self.language_files: dict = {}
+
+        # Логгер
+        self.logger = logging.getLogger(__name__)
 
         # Стандартный английский
         # Все переменные генерируются относительно этого словаря
@@ -40,6 +44,7 @@ class Language:
 
         # Копирование self.default_config и превращение всех переменных в StringVar
         for key, value in self.default_config.items():
+            # Пропускает строки из METADATA
             if key == 'METADATA':
                 continue
             if isinstance(value, dict):
@@ -64,6 +69,8 @@ class Language:
         # Поменять язык на текущий
         self.change_language(self.current_language)
 
+        self.logger.info('The Language module is fully initialized.')
+
     # Функция, которая восстанавливает английский язык, если он отсутствует или повреждён (но не изменён)
     def restore_english(self):
         parser = ConfigParser()
@@ -83,10 +90,10 @@ class Language:
                 parser.read('languages/' + configfile)
                 strings.append(parser.get(section, option))
             except configparser.NoSectionError as error:
-                ic(error)
+                self.logger.warning(f'No {section} section was found in {configfile}. {error}')
                 pass
             except configparser.NoOptionError as error:
-                ic(error)
+                self.logger.warning(f'No {option} option was found in {configfile}. {error}')
                 pass
 
         return strings
@@ -114,11 +121,14 @@ class Language:
 
                         option_val.set(parser.get(section_key, option_key))
 
-        ic()
+        self.logger.info(f'The language has been changed to {new_language}')
 
     # Сканирует папку language и записывает названия всех ini файлов, а также их name и id
     def scan(self):
         self.language_files = {f: f for f in os.listdir('languages') if f.endswith('.ini')}
+
+        self.logger.info(f'{len(self.language_files)} languages were found: {self.language_files}')
+
         parser = ConfigParser()
         for key in self.language_files:
 

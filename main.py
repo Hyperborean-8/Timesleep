@@ -1,24 +1,39 @@
+# Стандартные библиотеки
 import configparser
-from PIL import Image
-from icecream import ic
-import customtkinter as ctk
 import copy
 import math
 import os
+import logging
+from logging.handlers import RotatingFileHandler
+from datetime import datetime
+
+# Загруженные библиотеки
+from PIL import Image
+from icecream import ic
+import customtkinter as ctk
+
+# Локальные модули
 import settings
 import timeselect
 import timer
 import popups
 from language import Language
 
+# Базовая настройка customtkinter
 ctk.set_appearance_mode("dark")  # Режимы: системный (стандартный), светлый, тёмный
 ctk.set_default_color_theme("blue")  # Темы: синяя (стандартная), тёмно-синяя, зелёная
 ctk.deactivate_automatic_dpi_awareness()  # Программа больше не реагирует на изменение интерфейса ОС.
 
 # Отладка
-debug = True  # Режим отладки. Не позволяет программе выключить компьютер.
-ic(debug)
+debug = True
 if not debug: ic.disable()
+
+# Логирование
+handler = RotatingFileHandler(f"log.log", maxBytes=1 * 1024 * 1024,
+                              backupCount=5)  # Размер каждого лога из пяти не будет превышать 1 МБ
+
+logging.basicConfig(level=logging.DEBUG if debug else logging.INFO, handlers=[handler],
+                    format='%(asctime)s | %(levelname)s - %(name)s | %(message)s', datefmt='%D - %H:%M:%S')
 
 
 def hide_window():
@@ -55,9 +70,11 @@ class ButtonsFrame(ctk.CTkFrame):
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
 
-        self.start_button = ctk.CTkButton(self, textvariable=language.vars['buttons']['start_timer'], state=ctk.DISABLED, command=master.start_timer)
+        self.start_button = ctk.CTkButton(self, textvariable=language.vars['buttons']['start_timer'],
+                                          state=ctk.DISABLED, command=master.start_timer)
         self.start_button.grid(row=0, column=1, padx=10, pady=10, sticky='ew')
-        self.stop_button = ctk.CTkButton(self, textvariable=language.vars['buttons']['stop_timer'], command=master.stop_timer)
+        self.stop_button = ctk.CTkButton(self, textvariable=language.vars['buttons']['stop_timer'],
+                                         command=master.stop_timer)
         self.stop_button.grid(row=0, column=1, padx=10, pady=10, sticky='ew')
         self.stop_button.grid_remove()
 
@@ -90,11 +107,12 @@ class App(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        # Логгер
+        self.logger = logging.getLogger(__name__)
+
         # Настройки
         settings.check_config()
         self.Language = Language()
-
-        ic(self.Language)
 
         # Переменные для таймера
         self.timer_after = None
@@ -136,9 +154,10 @@ class App(ctk.CTk):
         # Это прикол который нам поможет потом))
         # self.attributes('-topmost', True)
 
+        self.logger.info('The __main__ module has been fully initialized')
+
     # Ставит время таймера
     def set_timer(self, seconds):
-        print('[03] Время установлено на: ', seconds)
 
         self.seconds_set = seconds
 
@@ -147,9 +166,10 @@ class App(ctk.CTk):
         else:
             self.ButtonsFrame.start_button.configure(state=ctk.NORMAL)
 
+        self.logger.info(f'The timer time has been set to {seconds} seconds')
+
     # Запускает таймер с выставленными секундами
     def start_timer(self):
-        print('[04] Время запущено с', self.seconds_set, 'секундами.')
 
         self.timer_on = True
         self.extra_second = True
@@ -163,6 +183,8 @@ class App(ctk.CTk):
 
         self.update_timer()
 
+        self.logger.info(f'The timer was started with {self.seconds_set} seconds.')
+
     # Останавливает таймер
     def stop_timer(self):
         self.timer_on = False
@@ -173,6 +195,8 @@ class App(ctk.CTk):
         self.ButtonsFrame.show_start()
 
         self.after_cancel(self.timer_after)
+
+        self.logger.info('The timer has been stopped')
 
     # Функция, которая вызывает саму себя и обновляет время каждую секунду
     def update_timer(self):
@@ -188,7 +212,7 @@ class App(ctk.CTk):
 
             self.timer_after = self.after(1000, self.update_timer)
         elif self.seconds == 0 and self.timer_on:
-            print('[05] Таймер сработал!')
+            self.logger.info('The timer reached zero and the computer was shut down.')
 
             turn_off_computer()
 
@@ -227,8 +251,13 @@ class App(ctk.CTk):
         if self.SettingsWindow is None or not self.SettingsWindow.winfo_exists():
             self.SettingsWindow = settings.SettingsWindow(self)  # create window if its None or destroyed
             self.after(10, self.SettingsWindow.focus)
+
+            self.logger.info('The settings window was opened.')
+
         else:
             self.SettingsWindow.focus()  # if window exists focus it
+
+            self.logger.info('The settings window was focused.')
 
 
 # Главные цикл

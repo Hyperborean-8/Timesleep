@@ -3,6 +3,7 @@ from configparser import ConfigParser
 import configparser
 from icecream import ic
 import customtkinter as ctk
+import logging
 
 
 # Окно с настройками
@@ -10,6 +11,9 @@ class SettingsWindow(ctk.CTkToplevel):
 
     def __init__(self,  *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # Логгер
+        self.logger = logging.getLogger(__name__)
 
         language = self.master.Language
 
@@ -61,7 +65,7 @@ class SettingsWindow(ctk.CTkToplevel):
         self.confirmation.text_label.configure(wraplength=350)
         self.confirmation.grid(row=1, column=0, padx=10, pady=2, sticky='w')
 
-    def update_title(self, *args):
+    def update_title(self, *_args):
         language = self.master.Language
         self.title(language.vars['settings']['title'].get())
         ic()
@@ -98,6 +102,9 @@ def check_config():
 
 # Функция, которая возвращает значения переменной
 def get(section, option):
+
+    logging.getLogger(__name__).info(f'The "{option}" option from the "{section}" section was requested.')
+
     parser = ConfigParser()
     parser.read('settings.ini')
     state = parser.get(section, option)
@@ -112,6 +119,9 @@ def get(section, option):
 
 # Функция, которая записывает значение настройки сразу же
 def set(section, option, state):
+
+    logging.getLogger(__name__).info(f'The "{option}" option from the "{section}" section has been changed to "{state}"')
+
     parser = ConfigParser()
     parser.read('settings.ini')
     parser.set(section, option, state)
